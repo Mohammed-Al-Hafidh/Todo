@@ -28,35 +28,54 @@ namespace Todo
         }
         public void loadFile()
         {
-
-            StreamReader sr = new StreamReader(fileName);
-            ;
-            string line = sr.ReadLine();
-            while (line != null)
+            using(StreamReader sr=new StreamReader(fileName))
             {
-                string[] myData = line.Split(';');
-                int difficulty;
-                if(! int.TryParse(myData[2],out difficulty))
+                string line = sr.ReadLine();
+                while (line != null)
                 {
-                    MessageBox.Show("Input string error. Go to next line...","Error",MessageBoxButton.OK,MessageBoxImage.Error);
-                    continue;
-                }
-                Task task = new Task(myData[0], myData[1], difficulty, myData[3]);
-                tasks.Add(task);
-                line = sr.ReadLine();
+                    string[] myData = line.Split(';');
+                    int difficulty;
+                    if (!int.TryParse(myData[2], out difficulty))
+                    {
+                        MessageBox.Show("Input string error. Go to next line...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        continue;
+                    }
+                    Task task = new Task(myData[0], myData[1], difficulty, myData[3]);
+                    tasks.Add(task);
+                    line = sr.ReadLine();
+
+
+                }                
+                lvList.ItemsSource = tasks;
+            }
+
+            //StreamReader sr = new StreamReader(fileName);            
+            //string line = sr.ReadLine();
+            //while (line != null)
+            //{
+            //    string[] myData = line.Split(';');
+            //    int difficulty;
+            //    if(! int.TryParse(myData[2],out difficulty))
+            //    {
+            //        MessageBox.Show("Input string error. Go to next line...","Error",MessageBoxButton.OK,MessageBoxImage.Error);
+            //        continue;
+            //    }
+            //    Task task = new Task(myData[0], myData[1], difficulty, myData[3]);
+            //    tasks.Add(task);
+            //    line = sr.ReadLine();
                 
 
-            }
-            sr.Close();
-            lvList.ItemsSource = tasks;
+            //}
+            //sr.Close();
+            //lvList.ItemsSource = tasks;
         }
         public void saveFile()
         {
             using (StreamWriter writer = new StreamWriter(fileName))
             {
-                foreach (Task myTaskk in tasks)
+                foreach (Task myTask in tasks)
                 {
-                    writer.WriteLine(myTaskk.ToDataString());
+                    writer.WriteLine(myTask.ToDataString());
                 }
             }
         }
@@ -71,20 +90,21 @@ namespace Todo
             {
                 Task task = (Task)lvList.SelectedItem;
                 txtTask.Text = task.TaskName;
-                slDifficulty.Value = task.Difficulty;                
-                dpDueDate.Text = task.DueDate;
+                slDifficulty.Value = task.Difficulty;
+                //dpDueDate.Text = task.DueDate;
+                dpDueDate.SelectedDate = DateTime.Parse(task.DueDate);
                 comStatus.Text = task.Status;
             }
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
-            if ((txtTask.Text == ""))
+            if ((txtTask.Text.Trim() == "")||(dpDueDate.SelectedDate.ToString().Trim()==""))
             {
                 MessageBox.Show("Input string error.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            Task task = new Task(txtTask.Text, dpDueDate.Text,int.Parse(slDifficulty.Value.ToString()), comStatus.Text);
+            Task task = new Task(txtTask.Text, dpDueDate.SelectedDate.ToString(),int.Parse(slDifficulty.Value.ToString()), comStatus.Text);
             tasks.Add(task);
             ResetValue();
         }
@@ -109,8 +129,17 @@ namespace Todo
                 return;
             }
             Task taskToBeDeleted = (Task)lvList.SelectedItem;
-            tasks.Remove(taskToBeDeleted);
-            ResetValue();
+            if (taskToBeDeleted != null)
+            {
+                MessageBoxResult result= MessageBox.Show("Are you sure?", "CONFIRMATION", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    tasks.Remove(taskToBeDeleted);
+                    ResetValue();
+                }
+
+            }
+            
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -145,7 +174,7 @@ namespace Todo
                 MessageBox.Show("You need to select one item", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            if ((txtTask.Text == ""))
+            if ((txtTask.Text == "") || (dpDueDate.SelectedDate.ToString().Trim() == ""))
             {
                 MessageBox.Show("Input string error.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
